@@ -1,0 +1,17 @@
+int main(void)
+{
+	unsigned char buffer[100];
+	// initialize SPI1 interface, speed 500 kHz
+	wiringPiSPISetup(1, 500000);
+	
+	// send and read 1 byte
+	buffer[0] = 0x76;
+	wiringPiSPIDataRW(1, buffer, 1);
+
+	// send and read 2 byte
+	buffer[0] = 0x7e;
+	buffer[1] = 0x56;
+	wiringPiSPIDataRW(1, buffer, 2);
+
+	return 0;
+}

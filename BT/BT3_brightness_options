@@ -1,0 +1,94 @@
+// Bài 3: Viết code để nút BT1 có chức năng chọn màu hiển thị, BT2 tăng độ sáng của màu hiển thị, BT3
+// giảm độ sáng của màu hiển thị.
+
+#include <wiringPi.h>
+#include <softPwm.h>
+#include <stdio.h>
+#include <stdint.h>
+
+#define BT1 23
+#define BT2 24
+#define BT3 25
+
+#define LED_R 0
+#define LED_G 1
+#define LED_B 2
+
+#define COLOR_NUM 3
+#define COLOR_R 0
+#define COLOR_G 1
+#define COLOR_B 2
+
+uint8_t led[3] = {LED_R, LED_G, LED_B};
+
+uint8_t color = COLOR_R;
+uint8_t brightness = 0;
+
+uint8_t r[COLOR_NUM] = {10, 0 , 0 };
+uint8_t g[COLOR_NUM] = {0 , 10, 0 };
+uint8_t b[COLOR_NUM] = {0 , 0 , 10};
+
+void ngat_bt1_color() // doi mau
+{
+    color++;
+    if (color >= COLOR_NUM) {
+        color = COLOR_R;
+    }
+    
+    softPwmWrite(led[LED_R], r[color] * brightness);
+    softPwmWrite(led[LED_G], g[color] * brightness);
+    softPwmWrite(led[LED_B], b[color] * brightness);
+}
+
+void ngat_bt2_bright_up() // tang do sang
+{
+    brightness++;
+    if (brightness > 10) {
+        brightness = 10;
+    }
+    
+    softPwmWrite(led[LED_R], r[color] * brightness);
+    softPwmWrite(led[LED_G], g[color] * brightness);
+    softPwmWrite(led[LED_B], b[color] * brightness);
+}
+
+void ngat_bt3_bright_down() // giam do sang
+{
+    brightness--;
+    if (brightness < 0) {
+        brightness = 0;
+    }
+    
+    softPwmWrite(led[LED_R], r[color] * brightness);
+    softPwmWrite(led[LED_G], g[color] * brightness);
+    softPwmWrite(led[LED_B], b[color] * brightness);
+}
+
+int main(void)
+{
+    // setup thư viện wiringPi
+    wiringPiSetup();
+
+    // khai báo IO, tạo softpwm
+    pinMode(BT1, INPUT);
+    pinMode(BT2, INPUT);
+    pinMode(BT3, INPUT);
+
+    for(int i=0; i<3; i++)
+    {
+        pinMode(led[i], OUTPUT);
+        digitalWrite(led[i], LOW); // tat led khi start
+        softPwmCreate(led[i], 0, 100);
+    }
+
+    // interrupt
+    wiringPiISR(BT1, INT_EDGE_RISING, &ngat_bt1_color); // kiem tra canh len 
+    wiringPiISR(BT2, INT_EDGE_RISING, &ngat_bt2_bright_up);
+    wiringPiISR(BT3, INT_EDGE_RISING, &ngat_bt3_bright_down);
+
+    while (1)
+    {   
+    }
+
+    return 0;
+}

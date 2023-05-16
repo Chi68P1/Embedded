@@ -1,0 +1,208 @@
+// KT2
+// Nguyen Huu Chi 20146479
+// Tran Khanh Duy 20146093
+// Nguyen Duc Binh 20146477
+
+#include <wiringPi.h> 
+#include <wiringPiI2C.h>
+#include <stdio.h> // delay
+#include <stdint.h> // int16_t
+#include <stdlib.h>
+#include <math.h> // gcc .... -lwringPi -lm
+#include <wiringPiSPI.h>
+
+#define SampleRate              25
+#define Config                  26
+#define Gyro_config             27 
+#define Acc_config              28
+#define Interrupt_config        56
+#define PWR_Management          107
+#define Acc_X                   59
+#define Acc_Y                   61
+#define Acc_Z                   63
+#define TemptHigh               65
+#define Gygro_X                 67
+#define Gygro_Y                 69
+#define Gygro_Z                 71  
+#define spi0                    0
+
+// global variables
+int mpu;
+uint8_t buf[2];
+
+unsigned char O[8]= {0x00,0x00,0x00,0x18,0x18,0x00,0x00,0x00};
+
+unsigned char N[3][8]={0x00,0x00,0x18,0x18,0x18,0x00,0x00,0x00,
+                        0x00,0x18,0x18,0x18,0x18,0x00,0x00,0x00,
+                        0x18,0x18,0x18,0x18,0x18,0x00,0x00,0x00};
+unsigned char E[3][8]={0x00,0x00,0x00,0x1c,0x1c,0x00,0x00,0x00,
+                        0x00,0x00,0x00,0x1e,0x1e,0x00,0x00,0x00,
+                        0x00,0x00,0x00,0x1f,0x1f,0x00,0x00,0x00};
+unsigned char S[3][8]={0x00,0x00,0x00,0x18,0x18,0x18,0x00,0x00,
+                        0x00,0x00,0x00,0x18,0x18,0x18,0x18,0x00,
+                        0x00,0x00,0x00,0x18,0x18,0x18,0x18,0x18};
+unsigned char W[3][8]={0x00,0x00,0x00,0x38,0x38,0x00,0x00,0x00,
+                        0x00,0x00,0x00,0x78,0x78,0x00,0x00,0x00,
+                        0x00,0x00,0x00,0xf8,0xf8,0x00,0x00,0x00};
+unsigned char NE[3][8]={0x00,0x00,0x04,0x18,0x18,0x00,0x00,0x00,
+                        0x00,0x02,0x04,0x18,0x18,0x00,0x00,0x00,
+                        0x01,0x02,0x04,0x18,0x18,0x00,0x00,0x00};
+unsigned char NW[3][8]={0x00,0x00,0x20,0x18,0x18,0x00,0x00,0x00,
+                        0x00,0x40,0x20,0x18,0x18,0x00,0x00,0x00,
+                        0x80,0x40,0x20,0x18,0x18,0x00,0x00,0x00};
+unsigned char SE[3][8]={0x00,0x00,0x00,0x18,0x18,0x04,0x00,0x00,
+                        0x00,0x00,0x00,0x18,0x18,0x04,0x02,0x00,
+                        0x00,0x00,0x00,0x18,0x18,0x04,0x02,0x01};
+unsigned char SW[3][8]={0x00,0x00,0x00,0x18,0x18,0x20,0x00,0x00,
+                        0x00,0x00,0x00,0x18,0x18,0x20,0x40,0x00,
+                        0x00,0x00,0x00,0x18,0x18,0x20,0x40,0x80};
+
+void sendData(uint8_t address, uint8_t data){
+    buf[0] = address;
+    buf[1] = data;
+    wiringPiSPIDataRW(spi0, buf, 2);
+}
+
+void Init_MAX7219(void) // SPI
+{
+    // set decode mode: 0x09EE
+    sendData(0x09,0x00); // 0000 0000- 0 on segment
+    // set intensity: 0x0A09
+    sendData(0x0A, 9);
+    // scan limit: 0x0B07
+    sendData(0x0B, 7);
+    // no shutdown, turn off display test
+    sendData(0x0C, 1);
+    sendData(0x0F, 0);
+}
+
+void Init_MPU6050(void) 
+{
+    // register 25->28,56,107
+    // sample rate 400Hz = 1000/(1+1.5), chon 1 ta se duoc 500Hz
+    wiringPiI2CWriteReg8(mpu, SampleRate, 1); 
+    // Không sử dụng nguồn xung ngoài (3 bit dau), on DLFP voi 44Hz (3 bit cuoi)
+    wiringPiI2CWriteReg8(mpu, Config, 0x00000011); //00 000 011 -> 3 
+    // gyro FS : +- 500 o/s
+    wiringPiI2CWriteReg8(mpu, Gyro_config, 0x08); //000 01 000 -> 8
+    // acc FS : +- 4g
+    wiringPiI2CWriteReg8(mpu, Acc_config, 0x08);  //000 01 000 -> 8
+    // mở interrupt của data ready
+    wiringPiI2CWriteReg8(mpu, Interrupt_config, 1);
+    // chọn xung nguồn Gyro X
+    wiringPiI2CWriteReg8(mpu, PWR_Management, 0x01);
+}
+
+int16_t read_sensor(unsigned char sensor)
+{
+    int16_t high, low, data;
+    high = wiringPiI2CReadReg8(mpu, sensor);
+    low = wiringPiI2CReadReg8(mpu, sensor+1);
+    data = (high << 8) | low; // 16bits 
+    return data;
+}
+
+
+struct SensorData {
+    float Ax, Ay, Az;
+    float AnglePitch, AngleRoll;
+};
+
+struct SensorData Read_MPU6050() {
+    struct SensorData data = {0};
+
+    // gia tốc theo trục chia cho 8192 do 4g
+    data.Ax = (float)read_sensor(Acc_X) / 8192.0; 
+    data.Ay = (float)read_sensor(Acc_Y) / 8192.0;
+    data.Az = (float)read_sensor(Acc_Z) / 8192.0;
+
+    // góc nghiêng khi cảm biên không chuyển dộng
+    data.AnglePitch = atan2(data.Ax, sqrt(pow(data.Ay, 2)+pow(data.Az, 2)))*180/M_PI;
+    data.AngleRoll = atan2(data.Ay, sqrt(pow(data.Ax, 2)+pow(data.Az, 2)))*180/M_PI;
+
+    return data;
+}
+
+int main()
+{
+
+    // setup I2C peripheral
+    mpu = wiringPiI2CSetup(0x68);
+    // setup SPI interface
+    wiringPiSPISetup(spi0, 10000000);
+    // check connection
+	if(wiringPiI2CReadReg8(mpu, 0x75)!= 0x68){
+		printf("Connection fail. \n");
+        exit(1);
+	}   
+    // GPIO configuration
+    
+    // MPU6050 configuration
+    Init_MPU6050();
+     // set operational mode for max7219
+    Init_MAX7219();
+
+    while (1)
+    {
+        struct SensorData data = Read_MPU6050();
+        printf("Roll: %f",data.AngleRoll);
+        printf("\n Pitch:%f",data.AnglePitch);
+
+        if (data.AngleRoll >  20) {     
+
+            if (data.AnglePitch > 20) 
+            {            //duong thang cheo goc phai tren
+                for(int i=0;i<8;i++){
+                sendData(i+1,SW[2][i]);}
+
+            }
+            else if (data.AnglePitch < -20){          //duong thang cheo goc trai tren
+                for(int i=0;i<8;i++){
+                sendData(i+1,SE[2][i]);}
+            }
+
+        }
+
+        if (data.AngleRoll <  -20) {     
+            if (data.AnglePitch < -20){            //duong thang cheo goc trai duoi
+                for(int i=0;i<8;i++){
+                sendData(i+1,NE[2][i]);}
+            }
+            else if (data.AnglePitch  > 20){         //duong thang cheo goc phai duoi
+    
+                for(int i=0;i<8;i++){
+                sendData(i+1,NW[2][i]);}
+            }
+        }
+
+        if ((data.AngleRoll < -20) && (fabs(data.AnglePitch) < 20 )) {   //nhanh giua tren
+                    for(int i=0;i<8;i++){
+                    sendData(i+1,N[2][i]);}
+                }
+
+        if ((data.AngleRoll > 20) && (fabs(data.AnglePitch) < 20 )) {   //nhanh giua duoi
+            for(int i=0;i<8;i++){
+            sendData(i+1,S[2][i]);}
+        }
+
+        if ((data.AnglePitch > 20) && (fabs(data.AngleRoll) < 20 )) {   //nhanh ben phai
+            for(int i=0;i<8;i++){
+            sendData(i+1,W[2][i]);}
+        }
+
+        if ((data.AnglePitch < -20) && (fabs(data.AngleRoll) < 20 )) {   //nhanh ben trai
+            for(int i=0;i<8;i++){
+            sendData(i+1,E[2][i]);}
+        }
+
+        if ((fabs (data.AnglePitch) < 20) && (fabs (data.AngleRoll) < 20)){  //trung tam
+            for(int i=0;i<8;i++){
+            sendData(i+1,O[i]);}
+        }
+
+    delay(100);
+    }
+    
+    return 0;
+} 
+    

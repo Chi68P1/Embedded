@@ -1,0 +1,29 @@
+#include <wiringPiSPI.h>
+
+#define spi_channel 0
+unsigned char data[2];
+uint16_t D;
+
+int main()
+{
+	// khởi tạo SPI
+	wiringPiSPISetup(spi_channel, 100000000);
+
+	// set chế độ hoạt động cho MCP 4921
+	data[0] = 0x30;
+	data[1] = 0;
+	wiringPiSPIDataRW(spi_channel, data, 2);
+
+	// vòng lặp
+	while(1)
+	{
+		for(int i = 0; i < 101; i++)	
+		{	
+			D = 2949/100*i;
+			data[0] = (D>>8) | 0x30; // 8 bit mức cao
+			data[1] = D; // 8 bit mức thấp
+			wiringPiSPIDataRW(spi_channel, data, 2);
+			delay(1);
+		}
+	}
+}
