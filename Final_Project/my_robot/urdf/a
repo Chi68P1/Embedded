@@ -1,0 +1,312 @@
+	<robot name="diff_robot">
+
+    <link name="base_link">  
+    </link>
+
+<!--Chi Duy Thiet ke than xe, frame-->
+
+    <joint name="base_joint" type="fixed">
+        <parent link="base_link"/>
+        <child link="frame_link"/>
+        <!-- lui 5 cm de cho toa do base = toa do trung tam 2 khop banh xe-->
+        <origin xyz="-0.025 0.0 0.0" rpy="0.0 0.0 0.0"/>
+    </joint>
+
+    <link name="frame_link">
+        <visual>
+            <!-- kich thuoc xe (dai 15cm, rong 10cm va cao 5 cm)-->
+            <geometry>
+                <box size="0.15 0.1 0.05"/>
+            </geometry>
+            <!--toa do xe, nang len 0.015 va tien toi 0.125 (toa do ngay sat sau xe)-->
+            <origin xyz="0.075 0.0 0.025" rpy="0.0 0.0 0.0"/>
+            <material name="blue">
+                <color rgba="0.0 0.0 1.0 0.5"/>
+            </material>
+        </visual>
+
+        <!-- tinh moment dong luong-->
+        <inertial>
+            <mass value="4.0"/>
+            <origin xyz="0.04 0.0 0.015"/>
+            <inertia ixx="0.02" ixy="0.0" ixz="0.0" iyy="0.02" iyz="0.0" izz="0.02"/>
+        </inertial>
+        <!-- va cham (copy geometry)-->
+        <collision>
+            <geometry>
+                <box size="0.14 0.1 0.03"/>
+            </geometry>
+            <origin xyz="0.075 0.0 0.025" rpy="0.0 0.0 0.0"/>
+        </collision>
+    </link>
+
+<!-- Thiet ke banh xe trai sau dan dong-->
+    <joint name="left_wheel_joint" type="continuous">
+        <parent link="base_link"/>
+        <child link="left_wheel_link"/>
+        <!-- 0.04x2 do rong giua 2 banh sau-->
+        <origin xyz="0.0 0.07 0.0" rpy="-1.57 0.0 0.0"/>
+        <axis xyz="0.0 0.0 1.0"/>   
+    </joint>
+
+    <link name="left_wheel_link">
+        <visual>
+            <!-- banh xe r = 3m, thick = 2 cm-->
+            <geometry>
+                <cylinder radius="0.03" length="0.02"/>
+            </geometry>
+            <origin xyz="0.0 0.0 0.0" rpy="0 0.0 0.0"/>
+            <material name="white">
+                <color rgba="1.0 1.0 1.0 1.0"/>
+            </material>
+        </visual>
+        <!-- tinh toan lai-->
+        <inertial>
+            <mass value="2.0"/>
+            <origin xyz="0.0 0.0 0.0"/>
+            <inertia ixx="0.02" ixy="0.0" ixz="0.0" iyy="0.02" iyz="0.0" izz="0.02"/>
+        </inertial>
+
+        <collision>
+            <geometry>
+                <cylinder radius="0.03" length="0.02"/>
+            </geometry>
+            <origin xyz="0.0 0.0 0.0" rpy="0 0.0 0.0"/>
+        </collision>
+
+    </link>
+
+<!-- Thiet ke banh xe phai sau dan dong-->
+    <joint name="right_wheel_joint" type="continuous">
+        <parent link="base_link"/>
+        <child link="right_wheel_link"/>
+        <origin xyz="0.0 -0.07 0.0" rpy="1.57 0.0 0.0"/>
+        <axis xyz="0.0 0.0 1.0"/>   
+    </joint>
+    <link name="right_wheel_link">
+        <visual>
+            <geometry>
+                <cylinder radius="0.03" length="0.02"/>
+            </geometry>
+            <origin xyz="0.0 0.0 0.0" rpy="0 0.0 0.0"/>
+            <material name="white">
+                <color rgba="1.0 1.0 1.0 1.0"/>
+            </material>
+        </visual>
+        <inertial>
+            <mass value="2.0"/>
+            <origin xyz="0.0 0.0 0.0"/>
+            <inertia ixx="0.02" ixy="0.0" ixz="0.0" iyy="0.02" iyz="0.0" izz="0.02"/>
+        </inertial>
+        <collision>
+            <geometry>
+                <cylinder radius="0.03" length="0.02"/>
+            </geometry>
+            <origin xyz="0.0 0.0 0.0" rpy="0 0.0 0.0"/>
+        </collision>
+    </link>
+
+<!--Thiet ke banh truoc lan-->
+
+    <joint name="caster_joint" type="continuous">
+        <parent link="base_link"/>
+        <child link="caster_link"/>
+        <origin xyz="0.08 0.0 0.0"/>     
+        <axis xyz="1.0 1.0 1.0"/>   
+   
+    </joint>
+    
+    <link name="caster_link">
+        <visual>
+            <geometry>
+                <sphere radius="0.025"/>
+            </geometry>
+            <origin xyz="0.0 0.0 0.0"/>
+            <material name="yellow">
+                <color rgba="1.0 1.0 0.0 1.0"/>
+            </material>
+        </visual>
+        <inertial>
+            <mass value="3.0"/>
+            <origin xyz="0.0 0.0 0.0"/>
+            <inertia ixx="1e-6" ixy="0" ixz="0" iyy="1e-6" iyz="0" izz="1e-6"/>
+        </inertial>
+        <collision>
+            <geometry>
+                <sphere radius="0.025"/>
+            </geometry>
+            <origin xyz="0.0 0.0 0.0"/>
+
+        </collision>
+    </link>
+
+<!-- Thiet ke banh xoay camera-->
+    <joint name="camera_wheel_joint" type="continuous">
+        <parent link="base_link"/>
+        <child link="camera_wheel_link"/>
+        <!-- 0.036 do chieu cao xe = 0.15-->
+    <origin xyz="0.1 0.0 0.055" rpy="0.0 0.0 0.0"/>
+        <!-- xoay theo truc x-->
+        <axis xyz="0.0 0.0 1.0"/>   
+    </joint>
+
+    <link name="camera_wheel_link">
+        <visual>
+            <!-- banh xe r = 1cm, thick = 0.6 cm-->
+            <geometry>
+                <cylinder radius="0.006" length="0.003"/>
+            </geometry>
+            <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
+            <material name="yelow">
+                <color rgba="1.0 1.0 0.0 1.0"/>
+            </material>
+        </visual>
+        <!-- tinh toan lai-->
+        <inertial>
+            <mass value="1e-5"/>
+            <origin xyz="0.0 0.0 0.0"/>
+            <inertia ixx="0.02" ixy="0.0" ixz="0.0" iyy="0.02" iyz="0.0" izz="0.02"/>
+        </inertial>
+
+        <collision>
+            <geometry>
+                <cylinder radius="0.006" length="0.003"/>
+            </geometry>
+            <origin xyz="0.0 0.0 0.0" rpy="0 0.0 0.0"/>
+        </collision>
+
+    </link>
+    
+<!-- camera-->
+    <joint name="camera_joint" type="fixed">
+        <parent link="camera_wheel_link"/>
+        <child link="camera_link"/>
+        <!-- nhac len 1.2 cm so voi khop xoay-->
+        <origin xyz="0.0 0.0 0.006" rpy="0.0 0.0 0.0"/>
+    </joint>
+
+    <link name="camera_link">
+        <visual>
+            <geometry>
+                <box size="0.006 0.015 0.01"/>
+            </geometry>
+            <origin xyz="0.0 0.0 0.0"/>
+            <material name="Purple">
+                <color rgba="1.0 0.0 1.0 1.0"/>
+            </material>
+        </visual>
+
+        <!-- khong can tinh do camera coi nhu rat nho-->
+        <inertial>
+            <mass value="1e-5" />
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+            <inertia ixx="1e-6" ixy="0" ixz="0" iyy="1e-6" iyz="0" izz="1e-6" />
+        </inertial>
+        <collision>
+            <geometry>
+                <box size="0.006 0.015 0.01"/>
+            </geometry>
+            <origin xyz="0.0 0.0 0.0"/>
+        </collision>
+    </link>
+    
+    <!-- Transmission -->
+    <transmission name="left_trans">
+        <type>transmission_interface/SimpleTransmission</type>
+        <joint name="left_wheel_joint">
+            <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
+        </joint>
+        <actuator name="motor1">
+            <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
+            <mechanicalReduction>1</mechanicalReduction>
+        </actuator>
+     </transmission>
+
+    <transmission name="right_trains">
+        <type>transmission_interface/SimpleTransmission</type>
+        <joint name="right_wheel_joint">
+            <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
+        </joint>
+        <actuator name="motor2">
+            <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
+            <mechanicalReduction>1</mechanicalReduction>
+        </actuator>
+    </transmission>
+
+    <transmission name="camera_trans">
+        <type>transmission_interface/SimpleTransmission</type>
+        <joint name="camera_wheel_joint">
+            <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
+        </joint>
+        <actuator name="motor3">
+            <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
+            <mechanicalReduction>1</mechanicalReduction>
+        </actuator>
+    </transmission>
+
+    <!-- Gazebo -->
+    <gazebo reference="frame_link">
+        <material>Gazebo/Orange</material>
+    </gazebo>
+    <gazebo reference="left_wheel_link">
+        <material>Gazebo/Blue</material>
+    </gazebo>
+    <gazebo reference="right_wheel_link">
+        <material>Gazebo/Blue</material>
+    </gazebo>
+    <gazebo reference="caster_link">
+        <material>Gazebo/Yellow</material>
+    </gazebo>
+    <gazebo reference="camera_wheel_link">
+        <material>Gazebo/Yellow</material>
+    </gazebo>
+
+    <!-- camera -->
+    <gazebo reference="camera_link">
+        <material>Gazebo/Purple</material>
+        <sensor type="camera" name="camera1">
+        <update_rate>30.0</update_rate>
+        <camera name="head">
+            <horizontal_fov>1.5962634</horizontal_fov>
+            <image>
+                <width>800</width>
+                <height>600</height>
+                <format>R8G8B8</format>
+            </image>
+            <clip>
+                <near>0.03</near>
+                <far>1000</far>
+            </clip>
+            <noise>
+            <type>gaussian</type>
+                <!-- Noise is sampled independently per pixel on each frame.
+                    That pixel's noise value is added to each of its color
+                    channels, which at that point lie in the range [0,1]. -->
+                <mean>0.0</mean>
+                <stddev>0.007</stddev>
+            </noise>
+        </camera>
+        <plugin name="camera_controller" filename="libgazebo_ros_camera.so">
+            <alwaysOn>true</alwaysOn>
+            <updateRate>0.0</updateRate>
+            <cameraName>myrobot/camera1</cameraName>
+            <imageTopicName>image_raw</imageTopicName>
+            <cameraInfoTopicName>camera_info</cameraInfoTopicName>
+            <frameName>camera_link</frameName>
+            <hackBaseline>0.07</hackBaseline>
+            <distortionK1>0.0</distortionK1>
+            <distortionK2>0.0</distortionK2>
+            <distortionK3>0.0</distortionK3>
+            <distortionT1>0.0</distortionT1>
+            <distortionT2>0.0</distortionT2>
+        </plugin>
+        </sensor>
+    </gazebo>
+    <!--cho dong co-->
+    <gazebo>
+        <plugin name="gazebo_ros_control" filename="libgazebo_ros_control.so">
+            <robotNamespace>/robotBCD</robotNamespace> <!-- nho ky ten robotBCD-->
+        </plugin>
+    </gazebo>
+
+</robot>
